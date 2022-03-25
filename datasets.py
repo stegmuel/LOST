@@ -38,22 +38,25 @@ class ImageDataset:
     def load_image(self, *args, **kwargs):
         return skimage.io.imread(self.image_path)
 
+
 class Dataset:
-    def __init__(self, dataset_name, dataset_set, remove_hards):
+    def __init__(self, dataset_path, dataset_set, remove_hards):
         """
         Build the dataloader
         """
 
-        self.dataset_name = dataset_name
+        # self.dataset_name = dataset_path
+        self.dataset_name = dataset_path.split('/')[-1]
+        self.dataset_path = dataset_path
         self.set = dataset_set
 
-        if dataset_name == "VOC07":
-            self.root_path = "datasets/VOC2007"
+        if "VOC07" in dataset_path:
+            # self.root_path = "datasets/VOC2007"
             self.year = "2007"
-        elif dataset_name == "VOC12":
-            self.root_path = "datasets/VOC2012"
+        elif "VOC12" in dataset_path:
+            # self.root_path = "datasets/VOC2012"
             self.year = "2012"
-        elif dataset_name == "COCO20k":
+        elif "COCO20k" in dataset_path:
             self.year = "2014"
             self.root_path = f"datasets/COCO/images/{dataset_set}{self.year}"
             self.sel20k = 'datasets/coco_20k_filenames.txt'
@@ -65,21 +68,21 @@ class Dataset:
         else:
             raise ValueError("Unknown dataset.")
 
-        if not os.path.exists(self.root_path):
+        if not os.path.exists(self.dataset_path):
             raise ValueError("Please follow the README to setup the datasets.")
 
         self.name = f"{self.dataset_name}_{self.set}"
 
         # Build the dataloader
-        if "VOC" in dataset_name:
+        if "VOC" in dataset_path:
             self.dataloader = torchvision.datasets.VOCDetection(
-                self.root_path,
+                self.dataset_path,
                 year=self.year,
                 image_set=self.set,
                 transform=transform,
                 download=False,
             )
-        elif "COCO20k" == dataset_name:
+        elif "COCO20k" == dataset_path:
             self.dataloader = torchvision.datasets.CocoDetection(
                 self.root_path, annFile=self.annfile, transform=transform
             )

@@ -6,6 +6,7 @@ from torchvision.models.vgg import vgg16
 
 import dino.vision_transformer as vits
 
+
 def get_model(arch, patch_size, resnet_dilate, device):
     if "resnet" in arch:
         if resnet_dilate == 1:

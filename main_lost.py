@@ -37,10 +37,9 @@ if __name__ == "__main__":
 
     # Use a dataset
     parser.add_argument(
-        "--dataset",
-        default="VOC07",
+        "--dataset_path",
+        default="/media/thomas/Samsung_T5/VOC07",
         type=str,
-        choices=[None, "VOC07", "VOC12", "COCO20k"],
         help="Dataset name.",
     )
     parser.add_argument(
@@ -113,7 +112,7 @@ if __name__ == "__main__":
     if args.image_path is not None:
         dataset = ImageDataset(args.image_path)
     else:
-        dataset = Dataset(args.dataset, args.set, args.no_hard)
+        dataset = Dataset(args.dataset_path, args.set, args.no_hard)
 
     # -------------------------------------------------------------------------------------------------------
     # Model
@@ -314,7 +313,6 @@ if __name__ == "__main__":
         cnt += 1
         if cnt % 50 == 0:
             pbar.set_description(f"Found {int(np.sum(corloc))}/{cnt}")
-
 
     # Save predicted bounding boxes
     if args.save_predictions:
