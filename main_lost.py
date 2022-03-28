@@ -15,8 +15,9 @@ from datasets import ImageDataset, Dataset, bbox_iou
 from visualizations import visualize_fms, visualize_predictions, visualize_seed_expansion
 from object_discovery import lost, detect_box, dino_seg
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Unsupervised object discovery with LOST.")
+
+def get_args_parser():
+    parser = argparse.ArgumentParser("Unsupervised object discovery with LOST.", add_help=False)
     parser.add_argument('--pretrained_weights',
                         default='/home/thomas/Documents/phd/samno_paper/samno/output/dino_deitsmall16_pretrain.pth', )
     parser.add_argument('--key', default='teacher', )
@@ -60,13 +61,14 @@ if __name__ == "__main__":
         help="If want to apply only on one image, give file path.",
     )
 
-    # Folder used to output visualizations and 
+    # Folder used to output visualizations and
     parser.add_argument(
         "--output_dir", type=str, default="outputs", help="Output directory to store predictions and visualizations."
     )
 
     # Evaluation setup
-    parser.add_argument("--no_hard", action="store_true", help="Only used in the case of the VOC_all setup (see the paper).")
+    parser.add_argument("--no_hard", action="store_true",
+                        help="Only used in the case of the VOC_all setup (see the paper).")
     parser.add_argument("--no_evaluation", action="store_true", help="Compute the evaluation.")
     parser.add_argument("--save_predictions", default=True, type=bool, help="Save predicted bounding boxes.")
 
@@ -100,9 +102,10 @@ if __name__ == "__main__":
     # Use dino-seg proposed method
     parser.add_argument("--dinoseg", action="store_true", help="Apply DINO-seg baseline.")
     parser.add_argument("--dinoseg_head", type=int, default=4)
+    return parser
 
-    args = parser.parse_args()
 
+def run_lost(args):
     if args.image_path is not None:
         args.save_predictions = False
         args.no_evaluation = True
@@ -144,7 +147,7 @@ if __name__ == "__main__":
 
     print(f"Running LOST on the dataset {dataset.name} (exp: {exp_name})")
 
-    # Visualization 
+    # Visualization
     if args.visualize:
         vis_folder = f"{args.output_dir}/visualizations/{exp_name}"
         os.makedirs(vis_folder, exist_ok=True)
@@ -154,7 +157,7 @@ if __name__ == "__main__":
     preds_dict = {}
     cnt = 0
     corloc = np.zeros(len(dataset.dataloader))
-    
+
     pbar = tqdm(dataset.dataloader)
     for im_id, inp in enumerate(pbar):
 
@@ -202,8 +205,10 @@ if __name__ == "__main__":
             if "vit" in args.arch:
                 # Store the outputs of qkv layer from the last attention layer
                 feat_out = {}
+
                 def hook_fn_forward_qkv(module, input, output):
                     feat_out["qkv"] = output
+
                 model._modules["blocks"][-1]._modules["attn"]._modules["qkv"].register_forward_hook(hook_fn_forward_qkv)
 
                 # Forward pass in the model
@@ -226,8 +231,8 @@ if __name__ == "__main__":
                     # Extract the qkv features of the last attention layer
                     qkv = (
                         feat_out["qkv"]
-                        .reshape(nb_im, nb_tokens, 3, nh, -1 // nh)
-                        .permute(2, 0, 3, 1, 4)
+                            .reshape(nb_im, nb_tokens, 3, nh, -1 // nh)
+                            .permute(2, 0, 3, 1, 4)
                     )
                     q, k, v = qkv[0], qkv[1], qkv[2]
                     k = k.transpose(1, 2).reshape(nb_im, nb_tokens, -1)
@@ -253,7 +258,7 @@ if __name__ == "__main__":
                 scales = [
                     float(img.shape[1]) / x.shape[2],
                     float(img.shape[2]) / x.shape[3],
-                ]
+                    ]
             elif "vgg16" in args.arch:
                 x = model.forward(img[None, :, :, :])
                 d, w_featmap, h_featmap = x.shape[1:]
@@ -265,7 +270,7 @@ if __name__ == "__main__":
                 scales = [
                     float(img.shape[1]) / x.shape[2],
                     float(img.shape[2]) / x.shape[3],
-                ]
+                    ]
             else:
                 raise ValueError("Unknown model.")
 
@@ -281,7 +286,8 @@ if __name__ == "__main__":
 
             # ------------ Visualizations -------------------------------------------
             if args.visualize == "fms":
-                visualize_fms(A.clone().cpu().numpy(), seed, scores, [w_featmap, h_featmap], scales, vis_folder, im_name)
+                visualize_fms(A.clone().cpu().numpy(), seed, scores, [w_featmap, h_featmap], scales, vis_folder,
+                              im_name)
 
             elif args.visualize == "seed_expansion":
                 image = dataset.load_image(im_name)
@@ -294,7 +300,8 @@ if __name__ == "__main__":
                     scales=scales,
                     initial_im_size=init_image_size[1:],
                 )
-                visualize_seed_expansion(image, pred, seed, pred_seed, scales, [w_featmap, h_featmap], vis_folder, im_name)
+                visualize_seed_expansion(image, pred, seed, pred_seed, scales, [w_featmap, h_featmap], vis_folder,
+                                         im_name)
 
             elif args.visualize == "pred":
                 image = dataset.load_image(im_name)
@@ -328,8 +335,14 @@ if __name__ == "__main__":
 
     # Evaluate
     if not args.no_evaluation:
-        print(f"corloc: {100*np.sum(corloc)/cnt:.2f} ({int(np.sum(corloc))}/{cnt})")
+        print(f"corloc: {100 * np.sum(corloc) / cnt:.2f} ({int(np.sum(corloc))}/{cnt})")
         result_file = os.path.join(folder, 'results.txt')
         with open(result_file, 'w') as f:
-            f.write('corloc,%.1f,,\n'%(100*np.sum(corloc)/cnt))
-        print('File saved at %s'%result_file)
+            f.write('corloc,%.1f,,\n' % (100 * np.sum(corloc) / cnt))
+        print('File saved at %s' % result_file)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser('LOST', parents=[get_args_parser()])
+    args = parser.parse_args()
+    run_lost(args)
