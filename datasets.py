@@ -40,7 +40,7 @@ class ImageDataset:
 
 
 class Dataset:
-    def __init__(self, dataset_path, dataset_set, remove_hards):
+    def __init__(self, dataset_path, remove_hards):
         """
         Build the dataloader
         """
@@ -48,21 +48,22 @@ class Dataset:
         # self.dataset_name = dataset_path
         self.dataset_name = dataset_path.split('/')[-1]
         self.dataset_path = dataset_path
-        self.set = dataset_set
 
         if "VOC07" in dataset_path:
-            # self.root_path = "datasets/VOC2007"
+            self.set = 'trainval'
             self.year = "2007"
         elif "VOC12" in dataset_path:
-            # self.root_path = "datasets/VOC2012"
+            self.set = 'trainval'
             self.year = "2012"
         elif "COCO20k" in dataset_path:
+            self.set = 'train'
             self.year = "2014"
-            self.root_path = f"datasets/COCO/images/{dataset_set}{self.year}"
+            self.root_path = f"{self.dataset_path}/images/train2014"
             self.sel20k = 'datasets/coco_20k_filenames.txt'
             # JSON file constructed based on COCO train2014 gt 
-            self.all_annfile = "datasets/COCO/annotations/instances_train2014.json"
-            self.annfile = "datasets/instances_train2014_sel20k.json"
+            # self.all_annfile = "datasets/COCO/annotations/instances_train2014.json"
+            self.all_annfile = f"{self.dataset_path}/annotations/instances_train2014.json"
+            self.annfile = f"{self.dataset_path}/instances_train2014_sel20k.json"
             if not os.path.exists(self.annfile):
                 select_coco_20k(self.sel20k, self.all_annfile)
         else:
@@ -351,5 +352,4 @@ def select_coco_20k(sel_file, all_annotations_file):
 
     with open("datasets/instances_train2014_sel20k.json", "w") as outfile:
         json.dump(train2014_20k, outfile)
-
     print('Done.')

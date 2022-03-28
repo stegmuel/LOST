@@ -20,7 +20,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser("Unsupervised object discovery with LOST.", add_help=False)
     parser.add_argument('--pretrained_weights',
                         default='/home/thomas/Documents/phd/samno_paper/samno/output/dino_deitsmall16_pretrain.pth', )
-    parser.add_argument('--key', default='teacher', )
+    parser.add_argument('--checkpoint_key', default='teacher', )
     parser.add_argument(
         "--arch",
         default="vit_small",
@@ -118,12 +118,12 @@ def run_lost(args):
     if args.image_path is not None:
         dataset = ImageDataset(args.image_path)
     else:
-        dataset = Dataset(args.dataset_path, args.set, args.no_hard)
+        dataset = Dataset(args.dataset_path, args.no_hard)
 
     # -------------------------------------------------------------------------------------------------------
     # Model
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model = get_model(args.arch, args.patch_size, args.resnet_dilate, device, args.pretrained_weights, args.key)
+    model = get_model(args.arch, args.patch_size, args.resnet_dilate, device, args.pretrained_weights, args.checkpoint_key)
 
     # -------------------------------------------------------------------------------------------------------
     # Directories
