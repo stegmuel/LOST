@@ -17,6 +17,9 @@ from object_discovery import lost, detect_box, dino_seg
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Unsupervised object discovery with LOST.")
+    parser.add_argument('--pretrained_weights',
+                        default='/home/thomas/Documents/phd/samno_paper/samno/output/dino_deitsmall16_pretrain.pth', )
+    parser.add_argument('--key', default='teacher', )
     parser.add_argument(
         "--arch",
         default="vit_small",
@@ -38,7 +41,7 @@ if __name__ == "__main__":
     # Use a dataset
     parser.add_argument(
         "--dataset_path",
-        default="/media/thomas/Samsung_T5/VOC07",
+        default="/media/thomas/Samsung_T5/VOC12",
         type=str,
         help="Dataset name.",
     )
@@ -65,7 +68,7 @@ if __name__ == "__main__":
     # Evaluation setup
     parser.add_argument("--no_hard", action="store_true", help="Only used in the case of the VOC_all setup (see the paper).")
     parser.add_argument("--no_evaluation", action="store_true", help="Compute the evaluation.")
-    parser.add_argument("--save_predictions", default=True, type=bool, help="Save predicted bouding boxes.")
+    parser.add_argument("--save_predictions", default=True, type=bool, help="Save predicted bounding boxes.")
 
     # Visualization
     parser.add_argument(
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------------------------------------
     # Model
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model = get_model(args.arch, args.patch_size, args.resnet_dilate, device)
+    model = get_model(args.arch, args.patch_size, args.resnet_dilate, device, args.pretrained_weights, args.key)
 
     # -------------------------------------------------------------------------------------------------------
     # Directories
@@ -137,7 +140,7 @@ if __name__ == "__main__":
         if "resnet" in args.arch:
             exp_name += f"dilate{args.resnet_dilate}"
         elif "vit" in args.arch:
-            exp_name += f"{args.patch_size}_{args.which_features}"
+            exp_name += f"{args.patch_size}_{args.which_features}_{args.key}"
 
     print(f"Running LOST on the dataset {dataset.name} (exp: {exp_name})")
 
