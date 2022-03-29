@@ -146,7 +146,7 @@ def run_lost(args):
         if "resnet" in args.arch:
             exp_name += f"dilate{args.resnet_dilate}"
         elif "vit" in args.arch:
-            exp_name += f"{args.patch_size}_{args.which_features}_{args.key}"
+            exp_name += f"{args.patch_size}_{args.which_features}_{args.checkpoint_key}"
 
     print(f"Running LOST on the dataset {dataset.name} (exp: {exp_name})")
 
