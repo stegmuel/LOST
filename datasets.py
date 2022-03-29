@@ -55,7 +55,7 @@ class Dataset:
         elif "VOC12" in dataset_path:
             self.set = 'trainval'
             self.year = "2012"
-        elif "COCO20k" in dataset_path:
+        elif "coco" in dataset_path:
             self.set = 'train'
             self.year = "2014"
             self.root_path = f"{self.dataset_path}/images/train2014"
