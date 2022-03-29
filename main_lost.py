@@ -111,6 +111,9 @@ def run_lost(args):
         args.no_evaluation = True
         args.dataset = None
 
+    # Print the provides arguments
+    print("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
+
     # -------------------------------------------------------------------------------------------------------
     # Dataset
 
