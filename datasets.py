@@ -59,7 +59,7 @@ class Dataset:
             self.set = 'train'
             self.year = "2014"
             self.root_path = f"{self.dataset_path}/images/train2014"
-            self.sel20k = 'datasets/coco_20k_filenames.txt'
+            self.sel20k = f"{self.dataset_path}/coco_20k_filenames.txt"
             # JSON file constructed based on COCO train2014 gt 
             # self.all_annfile = "datasets/COCO/annotations/instances_train2014.json"
             self.all_annfile = f"{self.dataset_path}/annotations/instances_train2014.json"
