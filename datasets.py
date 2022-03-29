@@ -65,7 +65,7 @@ class Dataset:
             self.all_annfile = f"{self.dataset_path}/annotations/instances_train2014.json"
             self.annfile = f"{self.dataset_path}/instances_train2014_sel20k.json"
             if not os.path.exists(self.annfile):
-                select_coco_20k(self.sel20k, self.all_annfile)
+                select_coco_20k(self.sel20k, self.all_annfile, self.dataset_path)
         else:
             raise ValueError("Unknown dataset.")
 
@@ -323,7 +323,8 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
     else:
         return iou  # IoU
 
-def select_coco_20k(sel_file, all_annotations_file):
+
+def select_coco_20k(sel_file, all_annotations_file, dataset_path):
     print('Building COCO 20k dataset.')
 
     # load all annotations
@@ -350,6 +351,6 @@ def select_coco_20k(sel_file, all_annotations_file):
     train2014_20k["annotations"] = new_anno
     train2014_20k["categories"] = train2014["categories"]
 
-    with open("datasets/instances_train2014_sel20k.json", "w") as outfile:
+    with open(f"{dataset_path}/instances_train2014_sel20k.json", "w") as outfile:
         json.dump(train2014_20k, outfile)
     print('Done.')
