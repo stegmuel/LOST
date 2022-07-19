@@ -57,15 +57,14 @@ class Dataset:
             self.year = "2012"
         elif "coco" in dataset_path:
             self.set = 'train'
-            self.year = "2014"
-            self.root_path = f"{self.dataset_path}/images/train2014"
-            self.sel20k = f"{self.dataset_path}/coco_20k_filenames.txt"
-            # JSON file constructed based on COCO train2014 gt 
-            # self.all_annfile = "datasets/COCO/annotations/instances_train2014.json"
-            self.all_annfile = f"{self.dataset_path}/annotations/instances_train2014.json"
-            self.annfile = f"{self.dataset_path}/instances_train2014_sel20k.json"
+            self.year = "2017"
+            self.root_path = f"{self.dataset_path}/images/train2017"
+            self.sel20k = f"{self.dataset_path}/coco_20k_filenames_2017.txt"
+            # JSON file constructed based on COCO train2014 gt
+            self.all_annfile = f"{self.dataset_path}/annotations/instances_train2017.json"
+            self.annfile = f"{self.dataset_path}/instances_train2017_sel20k.json"
             if not os.path.exists(self.annfile):
-                select_coco_20k(self.sel20k, self.all_annfile, self.dataset_path)
+                select_coco_20k_2017(self.sel20k, self.all_annfile, self.dataset_path)
         else:
             raise ValueError("Unknown dataset.")
 
@@ -83,7 +82,7 @@ class Dataset:
                 transform=transform,
                 download=False,
             )
-        elif "COCO20k" == dataset_path:
+        elif "coco" in dataset_path:
             self.dataloader = torchvision.datasets.CocoDetection(
                 self.root_path, annFile=self.annfile, transform=transform
             )
@@ -117,7 +116,7 @@ class Dataset:
         """
         if "VOC" in self.dataset_name:
             im_name = inp["annotation"]["filename"]
-        elif "COCO" in self.dataset_name:
+        elif "coco" in self.dataset_name:
             im_name = str(inp[0]["image_id"])
 
         return im_name
@@ -125,7 +124,7 @@ class Dataset:
     def extract_gt(self, targets, im_name):
         if "VOC" in self.dataset_name:
             return extract_gt_VOC(targets, remove_hards=self.remove_hards)
-        elif "COCO" in self.dataset_name:
+        elif "coco" in self.dataset_name:
             return extract_gt_COCO(targets, remove_iscrowd=True)
         else:
             raise ValueError("Unknown dataset")
@@ -353,4 +352,36 @@ def select_coco_20k(sel_file, all_annotations_file, dataset_path):
 
     with open(f"{dataset_path}/instances_train2014_sel20k.json", "w") as outfile:
         json.dump(train2014_20k, outfile)
+    print('Done.')
+
+
+def select_coco_20k_2017(sel_file, all_annotations_file, dataset_path):
+    print('Building COCO 20k dataset.')
+
+    # load all annotations
+    with open(all_annotations_file, "r") as f:
+        train2017 = json.load(f)
+
+    # load selected images
+    with open(sel_file, "r") as f:
+        sel_20k = f.readlines()
+        sel_20k = [s.replace("\n", "") for s in sel_20k]
+    im20k = [str(int(s.split("/")[-1].split(".")[0])) for s in sel_20k]
+
+    new_anno = []
+    new_images = []
+
+    for i in tqdm(im20k):
+        new_anno.extend(
+            [a for a in train2017["annotations"] if a["image_id"] == int(i)]
+        )
+        new_images.extend([a for a in train2017["images"] if a["id"] == int(i)])
+
+    train2017_20k = {}
+    train2017_20k["images"] = new_images
+    train2017_20k["annotations"] = new_anno
+    train2017_20k["categories"] = train2017["categories"]
+
+    with open(f"{dataset_path}/instances_train2017_sel20k.json", "w") as outfile:
+        json.dump(train2017_20k, outfile)
     print('Done.')
