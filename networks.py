@@ -1,5 +1,3 @@
-import os
-
 import torch.nn as nn
 from torchvision.models.resnet import resnet50
 from torchvision.models.vgg import vgg16
@@ -51,27 +49,23 @@ def get_model(arch, patch_size, resnet_dilate, device, pretrained_weights, key):
             # url = "dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth"
         # elif arch == "resnet50":
             # url = "dino_resnet50_pretrain/dino_resnet50_pretrain.pth"
-        if os.path.exists(pretrained_weights):
-            model.cuda()
-            utils.load_pretrained_weights(model, pretrained_weights, key, arch, patch_size)
-        # if url is not None:
-        #     print(
-        #         "Since no pretrained weights have been provided, we load the reference pretrained DINO weights."
-        #     )
-        #     state_dict = torch.hub.load_state_dict_from_url(
-        #         url="https://dl.fbaipublicfiles.com/dino/" + url
-        #     )
-        #     strict_loading = False if "resnet" in arch else True
-        #     msg = model.load_state_dict(state_dict, strict=strict_loading)
-        #     print(
-        #         "Pretrained weights found at {} and loaded with msg: {}".format(
-        #             url, msg
-        #         )
-        #     )
-        else:
-            print(
-                "There is no reference weights available for this model => We use random weights."
-            )
+        model.cuda()
+        prefix = None
+        key_ = "model"
+        if any(s in pretrained_weights for s in ['soco', 'pixpro']):
+            prefix = "module.encoder."
+        elif "mae" not in pretrained_weights:
+            if 'student' in key:
+                prefix = "module.backbone."
+            else:
+                prefix = "backbone."
+            key_ = key
+
+        if "resnet" in arch:
+            model = ResNet50Bottom(model)
+        elif "vgg16" in arch:
+            model = vgg16Bottom(model)
+        utils.load_pretrained_weights(model, pretrained_weights, key_, prefix)
 
     # If ResNet or VGG16 loose the last fully connected layer
     if "resnet" in arch:
@@ -80,7 +74,6 @@ def get_model(arch, patch_size, resnet_dilate, device, pretrained_weights, key):
         model = vgg16Bottom(model)
 
     model.eval()
-    model.to(device)
     return model
 
 

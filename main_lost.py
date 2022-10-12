@@ -1,19 +1,18 @@
-import os
 import argparse
-import random
+import copy
+import os
 import pickle
+from glob import glob
 
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-
 from tqdm import tqdm
-from PIL import Image
 
-from networks import get_model
 from datasets import ImageDataset, Dataset, bbox_iou
-from visualizations import visualize_fms, visualize_predictions, visualize_seed_expansion
+from networks import get_model
 from object_discovery import lost, detect_box, dino_seg
+from visualizations import visualize_fms, visualize_predictions, visualize_seed_expansion
 
 
 def get_args_parser():
@@ -328,9 +327,9 @@ def run_lost(args):
             pbar.set_description(f"Found {int(np.sum(corloc))}/{cnt}")
 
     # Save predicted bounding boxes
+    folder = f"{args.output_dir}/{exp_name}"
+    os.makedirs(folder, exist_ok=True)
     if args.save_predictions:
-        folder = f"{args.output_dir}/{exp_name}"
-        os.makedirs(folder, exist_ok=True)
         filename = os.path.join(folder, "preds.pkl")
         with open(filename, "wb") as f:
             pickle.dump(preds_dict, f)
